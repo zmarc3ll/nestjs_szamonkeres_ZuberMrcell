@@ -11,7 +11,7 @@ export class AccountService {
     @InjectRepository(Account)
     private accountRepository: Repository<Account>
   ) {}
-  @Post()
+  @Post('/account')
   async create(@Body() accountData: CreateAccountDto) {
     const newAccount = await this.accountRepository.create(accountData);
     await this.accountRepository.save(newAccount)

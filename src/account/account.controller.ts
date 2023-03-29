@@ -1,34 +1,39 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { AccountService } from './account.service';
-import { CreateAccountDto } from './dto/create-account.dto';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import  CreateAccountDto  from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { Account } from './entities/account.entity';
 
 @Controller('account')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
-
-  @Post()
-  create(@Body() createAccountDto: CreateAccountDto) {
-    return this.accountService.create(createAccountDto);
+  constructor(
+    @InjectRepository(Account)
+    private accountRepository: Repository<Account>
+  ) {}
+  @Post('')
+  async create(@Body() accountData: CreateAccountDto) {
+    const newAccount = await this.accountRepository.create(accountData);
+    await this.accountRepository.save(newAccount)
+    return newAccount;
   }
 
-  @Get()
-  findAll() {
-    return this.accountService.findAll();
+  @Get('/:id')
+  async getById(id: number) {
+    const account = await this.accountRepository.findOne({where: { id }});
+    if (account) {
+      return account;
+    }
+    throw new HttpException('Nem létezik számla ezzel az azonosítóval', HttpStatus.NOT_FOUND);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.accountService.findOne(+id);
+  @Patch('/:id')
+  update(@Param('id') id: number, @Body() updateAccountDto: UpdateAccountDto) {
+    return this.accountRepository.update(+id, updateAccountDto);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAccountDto: UpdateAccountDto) {
-    return this.accountService.update(+id, updateAccountDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.accountService.remove(+id);
+  @Delete('/:id')
+  remove(@Param('id') id: number) {
+    return this.accountRepository.remove(Account[id])
   }
 }
